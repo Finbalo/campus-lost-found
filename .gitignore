@@ -1,0 +1,6 @@
+.terraform/
+*.tfstate*
+terraform/api.zip
+__pycache__/
+.pytest_cache/
+.ruff_cache/
