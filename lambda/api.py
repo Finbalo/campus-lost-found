@@ -70,7 +70,7 @@ def notify_matches(item):
     sns.publish(TopicArn=TOPIC_ARN, Subject="Lost & Found: possible match", Message="\n".join(lines))
 
 
-def create_item(body):
+def create_item(body, owner):
     item_type = body.get("type")
     category = body.get("category")
     title = clean(body.get("title"), 80)
@@ -95,6 +95,7 @@ def create_item(body):
         "contact": contact,
         "photoUrl": f"{CDN_URL}/{photo_key}" if photo_key else "",
         "status": "open",
+        "ownerId": owner,
         "created": int(time.time()),
     }
     table.put_item(Item=item)
@@ -105,15 +106,23 @@ def create_item(body):
     return respond(201, item)
 
 
-def resolve_item(item_id):
-    table.update_item(
-        Key={"id": item_id},
-        UpdateExpression="SET #s = :r",
-        ConditionExpression="attribute_exists(id)",
-        ExpressionAttributeNames={"#s": "status"},
-        ExpressionAttributeValues={":r": "resolved"},
-    )
+def resolve_item(item_id, owner):
+    try:
+        table.update_item(
+            Key={"id": item_id},
+            UpdateExpression="SET #s = :r",
+            ConditionExpression="attribute_exists(id) AND ownerId = :me",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={":r": "resolved", ":me": owner},
+        )
+    except table.meta.client.exceptions.ConditionalCheckFailedException:
+        return respond(403, {"error": "Only the person who posted this can close it."})
     return respond(200, {"ok": True})
+
+
+def owner_of(event):
+    claims = event.get("requestContext", {}).get("authorizer", {}).get("jwt", {}).get("claims", {})
+    return claims.get("sub")
 
 
 def handler(event, context):
@@ -123,15 +132,17 @@ def handler(event, context):
     except json.JSONDecodeError:
         return respond(400, {"error": "Invalid JSON."})
 
-    try:
-        if route == "GET /items":
-            return list_items()
-        if route == "POST /items":
-            return create_item(body)
-        if route == "POST /upload-url":
-            return upload_url(body)
-        if route == "POST /items/{id}/resolve":
-            return resolve_item(event["pathParameters"]["id"])
-    except table.meta.client.exceptions.ConditionalCheckFailedException:
-        return respond(404, {"error": "Item not found."})
+    if route == "GET /items":
+        return list_items()
+
+    owner = owner_of(event)
+    if not owner:
+        return respond(401, {"error": "Please log in."})
+
+    if route == "POST /items":
+        return create_item(body, owner)
+    if route == "POST /upload-url":
+        return upload_url(body)
+    if route == "POST /items/{id}/resolve":
+        return resolve_item(event["pathParameters"]["id"], owner)
     return respond(404, {"error": "Not found."})

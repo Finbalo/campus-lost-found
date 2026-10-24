@@ -256,6 +256,48 @@ resource "aws_lambda_function" "api" {
   }
 }
 
+# ---------------- Login (Cognito) ----------------
+resource "aws_cognito_user_pool" "users" {
+  name                     = "${var.project}-users"
+  username_attributes      = ["email"]
+  auto_verified_attributes = ["email"]
+
+  password_policy {
+    minimum_length    = 8
+    require_lowercase = true
+    require_numbers   = true
+    require_symbols   = false
+    require_uppercase = false
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+}
+
+resource "aws_cognito_user_pool_domain" "auth" {
+  domain       = "${var.project}-${local.suffix}"
+  user_pool_id = aws_cognito_user_pool.users.id
+}
+
+resource "aws_cognito_user_pool_client" "web" {
+  name         = "${var.project}-web"
+  user_pool_id = aws_cognito_user_pool.users.id
+
+  generate_secret                      = false
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["openid", "email"]
+  supported_identity_providers         = ["COGNITO"]
+  callback_urls                        = ["https://${aws_cloudfront_distribution.cdn.domain_name}/"]
+  logout_urls                          = ["https://${aws_cloudfront_distribution.cdn.domain_name}/"]
+  explicit_auth_flows                  = ["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  prevent_user_existence_errors        = "ENABLED"
+}
+
 # ---------------- API Gateway (HTTP API) ----------------
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project}-api"
@@ -264,7 +306,7 @@ resource "aws_apigatewayv2_api" "http" {
   cors_configuration {
     allow_origins = ["https://${aws_cloudfront_distribution.cdn.domain_name}"]
     allow_methods = ["GET", "POST", "OPTIONS"]
-    allow_headers = ["content-type"]
+    allow_headers = ["content-type", "authorization"]
   }
 }
 
@@ -275,16 +317,35 @@ resource "aws_apigatewayv2_integration" "lambda" {
   payload_format_version = "2.0"
 }
 
+locals {
+  # true = the caller must be logged in (JWT from Cognito)
+  routes = {
+    "GET /items"               = false
+    "POST /items"              = true
+    "POST /upload-url"         = true
+    "POST /items/{id}/resolve" = true
+  }
+}
+
+resource "aws_apigatewayv2_authorizer" "jwt" {
+  api_id           = aws_apigatewayv2_api.http.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "cognito"
+
+  jwt_configuration {
+    audience = [aws_cognito_user_pool_client.web.id]
+    issuer   = "https://${aws_cognito_user_pool.users.endpoint}"
+  }
+}
+
 resource "aws_apigatewayv2_route" "routes" {
-  for_each = toset([
-    "GET /items",
-    "POST /items",
-    "POST /upload-url",
-    "POST /items/{id}/resolve",
-  ])
-  api_id    = aws_apigatewayv2_api.http.id
-  route_key = each.value
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  for_each           = local.routes
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = each.key
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = each.value ? "JWT" : "NONE"
+  authorizer_id      = each.value ? aws_apigatewayv2_authorizer.jwt.id : null
 }
 
 resource "aws_apigatewayv2_stage" "default" {

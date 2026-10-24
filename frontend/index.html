@@ -28,6 +28,9 @@
   header { padding: 44px 0 24px; }
   h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.02em; max-width: 14ch; }
   header p { margin: 0; color: var(--muted); max-width: 52ch; }
+  .auth { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-bottom: 18px; font-weight: 600; font-size: .92rem; color: var(--muted); }
+  .auth button { border: 1.5px solid var(--ink); background: transparent; border-radius: 999px; padding: 5px 14px; cursor: pointer; font-weight: 600; }
+  .auth button:hover { background: var(--ink); color: #fff; }
   .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 22px 0; }
   .tabs { display: flex; gap: 6px; }
   button, input, select, textarea { font: inherit; color: inherit; }
@@ -87,6 +90,7 @@
 <body>
 <div class="wrap">
   <header>
+    <div class="auth" id="auth"></div>
     <h1>Lost something on campus?</h1>
     <p>Post what you lost or what you found. If a lost item and a found item look alike, we email the people involved.</p>
   </header>
@@ -140,6 +144,71 @@
 <script src="config.js"></script>
 <script>
 const API = window.CONFIG.API_URL;
+const AUTH = "https://" + window.CONFIG.AUTH_DOMAIN;
+const CLIENT_ID = window.CONFIG.CLIENT_ID;
+const REDIRECT = location.origin + "/";
+
+function b64url(bytes) {
+  return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function login() {
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  sessionStorage.setItem("pkce", verifier);
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  const q = new URLSearchParams({
+    client_id: CLIENT_ID, response_type: "code", scope: "openid email", redirect_uri: REDIRECT,
+    code_challenge: challenge, code_challenge_method: "S256",
+  });
+  location.href = AUTH + "/oauth2/authorize?" + q;
+}
+
+function logout() {
+  localStorage.removeItem("idToken");
+  location.href = AUTH + "/logout?" + new URLSearchParams({ client_id: CLIENT_ID, logout_uri: REDIRECT });
+}
+
+async function finishLogin() {
+  const code = new URLSearchParams(location.search).get("code");
+  if (!code) return;
+  history.replaceState({}, "", location.pathname);
+  const res = await fetch(AUTH + "/oauth2/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code", client_id: CLIENT_ID, code,
+      redirect_uri: REDIRECT, code_verifier: sessionStorage.getItem("pkce") || "",
+    }),
+  });
+  if (res.ok) localStorage.setItem("idToken", (await res.json()).id_token);
+}
+
+function currentUser() {
+  const token = localStorage.getItem("idToken");
+  if (!token) return null;
+  try {
+    const p = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    if (p.exp * 1000 < Date.now()) { localStorage.removeItem("idToken"); return null; }
+    return p;
+  } catch (e) { return null; }
+}
+
+function renderAuth() {
+  const box = document.getElementById("auth");
+  box.replaceChildren();
+  const user = currentUser();
+  if (user) {
+    const out = document.createElement("button");
+    out.textContent = "Log out";
+    out.onclick = logout;
+    box.append(document.createTextNode(user.email || "Signed in"), out);
+  } else {
+    const inn = document.createElement("button");
+    inn.textContent = "Log in or sign up";
+    inn.onclick = login;
+    box.append(inn);
+  }
+}
 const grid = document.getElementById("grid");
 const dialog = document.getElementById("dialog");
 const form = document.getElementById("form");
@@ -147,10 +216,11 @@ const errorEl = document.getElementById("error");
 let items = [], filter = "all", query = "";
 
 async function api(path, options) {
-  const res = await fetch(API + path, {
-    ...options,
-    headers: { "content-type": "application/json" },
-  });
+  const headers = { "content-type": "application/json" };
+  const token = localStorage.getItem("idToken");
+  if (token) headers.authorization = "Bearer " + token;
+  const res = await fetch(API + path, { ...options, headers });
+  if (res.status === 401) { localStorage.removeItem("idToken"); renderAuth(); throw new Error("Please log in again."); }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Something went wrong.");
   return data;
@@ -182,9 +252,17 @@ function render() {
       el("h3", { textContent: i.title }),
       el("p", { className: "meta", textContent: `${i.location} - ${new Date(i.created * 1000).toLocaleDateString()}` }));
     if (i.description) body.append(el("p", { className: "desc", textContent: i.description }));
-    const resolve = el("button", { className: "resolve", textContent: i.type === "lost" ? "I got it back" : "Returned to owner" });
-    resolve.onclick = async () => { await api(`/items/${i.id}/resolve`, { method: "POST", body: "{}" }); load(); };
-    body.append(el("div", { className: "actions" }, el("span", { className: "contact", textContent: i.contact }), resolve));
+    const actions = el("div", { className: "actions" }, el("span", { className: "contact", textContent: i.contact }));
+    const me = currentUser();
+    if (me && i.ownerId === me.sub) {
+      const resolve = el("button", { className: "resolve", textContent: i.type === "lost" ? "I got it back" : "Returned to owner" });
+      resolve.onclick = async () => {
+        try { await api(`/items/${i.id}/resolve`, { method: "POST", body: "{}" }); load(); }
+        catch (err) { alert(err.message); }
+      };
+      actions.append(resolve);
+    }
+    body.append(actions);
     card.append(body);
     grid.append(card);
   }
@@ -202,7 +280,13 @@ document.querySelectorAll(".tab").forEach(btn => btn.onclick = () => {
   render();
 });
 document.getElementById("search").oninput = e => { query = e.target.value; render(); };
-document.getElementById("open-form").onclick = () => { errorEl.textContent = ""; dialog.showModal(); };
+document.getElementById("open-form").onclick = () => {
+  const me = currentUser();
+  if (!me) { login(); return; }
+  errorEl.textContent = "";
+  if (!form.contact.value) form.contact.value = me.email || "";
+  dialog.showModal();
+};
 document.getElementById("cancel").onclick = () => dialog.close();
 
 form.onsubmit = async e => {
@@ -231,7 +315,7 @@ form.onsubmit = async e => {
   }
 };
 
-load();
+(async () => { await finishLogin(); renderAuth(); load(); })();
 </script>
 </body>
 </html>

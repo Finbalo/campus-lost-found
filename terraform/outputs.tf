@@ -13,3 +13,11 @@ output "site_bucket" {
 output "distribution_id" {
   value = aws_cloudfront_distribution.cdn.id
 }
+
+output "cognito_domain" {
+  value = "${aws_cognito_user_pool_domain.auth.domain}.auth.${var.region}.amazoncognito.com"
+}
+
+output "cognito_client_id" {
+  value = aws_cognito_user_pool_client.web.id
+}
