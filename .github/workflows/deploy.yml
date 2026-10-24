@@ -46,6 +46,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-skip-session-tagging: true
       - name: Terraform plan
         working-directory: terraform
         run: |
@@ -69,6 +70,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-skip-session-tagging: true
       - name: Terraform apply
         working-directory: terraform
         env:
