@@ -10,7 +10,14 @@ from botocore.config import Config
 
 REGION = os.environ.get("AWS_REGION", "eu-west-1")
 table = boto3.resource("dynamodb").Table(os.environ["TABLE"])
-s3 = boto3.client("s3", region_name=REGION, config=Config(signature_version="s3v4"))
+# Use the regional endpoint so upload links point straight at the bucket's region.
+# The global endpoint answers browser preflight checks with a redirect, which browsers reject.
+s3 = boto3.client(
+    "s3",
+    region_name=REGION,
+    endpoint_url=f"https://s3.{REGION}.amazonaws.com",
+    config=Config(signature_version="s3v4", s3={"addressing_style": "virtual"}),
+)
 sns = boto3.client("sns")
 
 BUCKET = os.environ["PHOTO_BUCKET"]
