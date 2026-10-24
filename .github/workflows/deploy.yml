@@ -86,9 +86,8 @@ jobs:
           API_URL=$(terraform output -raw api_url)
           BUCKET=$(terraform output -raw site_bucket)
           DIST=$(terraform output -raw distribution_id)
-          AUTH_DOMAIN=$(terraform output -raw cognito_domain)
           CLIENT_ID=$(terraform output -raw cognito_client_id)
-          echo "window.CONFIG = { API_URL: \"$API_URL\", AUTH_DOMAIN: \"$AUTH_DOMAIN\", CLIENT_ID: \"$CLIENT_ID\" };" > ../frontend/config.js
+          echo "window.CONFIG = { API_URL: \"$API_URL\", CLIENT_ID: \"$CLIENT_ID\", REGION: \"$AWS_REGION\" };" > ../frontend/config.js
           aws s3 sync ../frontend "s3://$BUCKET" --delete --cache-control "no-cache"
           aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*"
           echo "Live at $(terraform output -raw site_url)" >> "$GITHUB_STEP_SUMMARY"

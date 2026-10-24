@@ -294,7 +294,7 @@ resource "aws_cognito_user_pool_client" "web" {
   supported_identity_providers         = ["COGNITO"]
   callback_urls                        = ["https://${aws_cloudfront_distribution.cdn.domain_name}/"]
   logout_urls                          = ["https://${aws_cloudfront_distribution.cdn.domain_name}/"]
-  explicit_auth_flows                  = ["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
   prevent_user_existence_errors        = "ENABLED"
 }
 

@@ -2,95 +2,189 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
 <title>Campus Lost &amp; Found</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #eef1f5;
-    --ink: #14213d;
-    --muted: #5b6577;
-    --line: #cfd6e0;
-    --card: #ffffff;
-    --lost: #d7452a;
-    --found: #0b7d7f;
-    --radius: 10px;
+    --bg: #eef1f5; --ink: #14213d; --muted: #5b6577; --line: #cfd6e0; --card: #ffffff;
+    --lost: #c93d24; --lost-soft: #fdf0ed; --found: #0b7d7f; --found-soft: #e6f4f4;
+    --radius: 12px; --pad: max(18px, env(safe-area-inset-left));
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
-    line-height: 1.5;
+    margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5;
+    font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px 64px; }
-  header { padding: 44px 0 24px; }
-  h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.02em; max-width: 14ch; }
-  header p { margin: 0; color: var(--muted); max-width: 52ch; }
-  .auth { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-bottom: 18px; font-weight: 600; font-size: .92rem; color: var(--muted); }
-  .auth button { border: 1.5px solid var(--ink); background: transparent; border-radius: 999px; padding: 5px 14px; cursor: pointer; font-weight: 600; }
-  .auth button:hover { background: var(--ink); color: #fff; }
-  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 22px 0; }
-  .tabs { display: flex; gap: 6px; }
   button, input, select, textarea { font: inherit; color: inherit; }
-  .tab {
-    border: 1.5px solid var(--ink); background: transparent; padding: 7px 16px; border-radius: 999px; cursor: pointer; font-weight: 600;
-  }
-  .tab[aria-pressed="true"] { background: var(--ink); color: #fff; }
-  .search { flex: 1; min-width: 180px; padding: 9px 14px; border: 1.5px solid var(--line); border-radius: 999px; background: #fff; }
-  .post-btn { background: var(--lost); color: #fff; border: 0; padding: 10px 20px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+  button { cursor: pointer; }
   :focus-visible { outline: 3px solid #4c8dff; outline-offset: 2px; }
+  [hidden] { display: none !important; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
-  /* the claim tag: punched hole + coloured stub on the left */
+  .wrap {
+    max-width: 1180px; margin: 0 auto;
+    padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 72px max(18px, env(safe-area-inset-left));
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+  .brand { display: flex; align-items: center; gap: 6px; font-weight: 800; letter-spacing: -0.01em; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+  .dot.lost { background: var(--lost); }
+  .dot.found { background: var(--found); margin-left: -6px; box-shadow: 0 0 0 2px var(--bg); }
+  .brand-name { margin-left: 4px; }
+  .auth { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; flex: none;
+    display: grid; place-items: center; font-weight: 800; text-transform: uppercase;
+  }
+  .who { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: .92rem; color: var(--muted); }
+  .btn {
+    min-height: 44px; padding: 0 18px; border-radius: 999px; font-weight: 700; border: 1.5px solid var(--ink);
+    background: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.coral { background: var(--lost); border-color: var(--lost); color: #fff; }
+  .btn.small { min-height: 38px; padding: 0 14px; font-size: .92rem; }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+
+  header.hero { padding: 28px 0 8px; }
+  h1 { font-size: clamp(2rem, 7vw, 3.6rem); line-height: 1.04; margin: 0 0 10px; font-weight: 800; letter-spacing: -0.02em; max-width: 14ch; }
+  .hero p { margin: 0; color: var(--muted); max-width: 52ch; font-size: clamp(1rem, 2.4vw, 1.1rem); }
+
+  /* ---------- controls ---------- */
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 22px 0; }
+  .tabs { display: flex; gap: 6px; }
+  .tab { min-height: 44px; border: 1.5px solid var(--ink); background: transparent; padding: 0 18px; border-radius: 999px; font-weight: 600; }
+  .tab[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .search { flex: 1; min-width: 200px; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; background: #fff; }
+
+  /* ---------- cards ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; align-items: start; }
   .tag {
     position: relative; background: var(--card); border-radius: var(--radius); overflow: hidden;
-    display: flex; flex-direction: column; border: 1px solid var(--line);
-    border-left: 14px solid var(--accent);
+    display: flex; flex-direction: column; border: 1px solid var(--line); border-left: 14px solid var(--accent);
   }
   .tag[data-type="lost"] { --accent: var(--lost); }
   .tag[data-type="found"] { --accent: var(--found); }
   .tag::before {
     content: ""; position: absolute; top: 14px; left: -9px; width: 10px; height: 10px; border-radius: 50%;
-    background: var(--bg); border: 1px solid var(--line);
+    background: var(--bg); border: 1px solid var(--line); z-index: 1;
   }
-  .tag img { width: 100%; height: 170px; object-fit: cover; display: block; background: #dfe5ec; }
-  .tag .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .tag img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; background: #dfe5ec; }
+  .tag .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  .kindrow { display: flex; align-items: center; gap: 8px; }
   .kind { font-weight: 800; color: var(--accent); font-size: .95rem; }
-  .tag h3 { margin: 0; font-size: 1.2rem; line-height: 1.2; }
-  .meta { color: var(--muted); font-size: .92rem; margin: 0; }
-  .desc { margin: 2px 0 0; font-size: .96rem; }
-  .actions { margin-top: auto; padding-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px dashed var(--line); }
-  .contact { font-weight: 600; word-break: break-word; }
-  .resolve { margin-left: auto; background: transparent; border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: .88rem; font-weight: 600; }
-  .resolve:hover { background: var(--ink); color: #fff; }
-  .empty { grid-column: 1 / -1; padding: 36px; border: 2px dashed var(--line); border-radius: var(--radius); text-align: center; color: var(--muted); }
+  .mine { font-size: .75rem; font-weight: 700; background: var(--ink); color: #fff; padding: 2px 8px; border-radius: 999px; }
+  .tag h3 { margin: 0; font-size: 1.2rem; line-height: 1.2; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: .92rem; margin: 0; overflow-wrap: anywhere; }
+  .desc { margin: 2px 0 0; font-size: .96rem; overflow-wrap: anywhere; }
+  .actions { margin-top: auto; padding-top: 10px; display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; border-top: 1px dashed var(--line); }
+  .contact { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+  .resolve { margin-left: auto; min-height: 40px; padding: 0 14px; background: transparent; border: 1.5px solid var(--ink); border-radius: 999px; font-size: .9rem; font-weight: 600; }
+  .empty { grid-column: 1 / -1; padding: 36px 20px; border: 2px dashed var(--line); border-radius: var(--radius); text-align: center; color: var(--muted); }
+  .skeleton { height: 250px; border-radius: var(--radius); background: linear-gradient(90deg, #e3e8ef 25%, #eef1f5 50%, #e3e8ef 75%); background-size: 200% 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton { animation: shimmer 1.2s infinite linear; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .tag { transition: transform .15s; }
+    .tag:hover { transform: translateY(-2px); }
+  }
+  @media (hover: hover) {
+    .btn:not(.solid):not(.coral):hover, .resolve:hover { background: var(--ink); color: #fff; }
+    .tab:not([aria-pressed="true"]):hover { background: #dfe5ec; }
+  }
 
-  dialog { border: 0; border-radius: 14px; padding: 0; width: min(520px, 94vw); box-shadow: 0 20px 60px rgba(20,33,61,.3); }
-  dialog::backdrop { background: rgba(20,33,61,.5); }
-  form { padding: 24px; display: grid; gap: 14px; }
-  form h2 { margin: 0; font-size: 1.6rem; }
-  label { display: grid; gap: 4px; font-weight: 600; font-size: .92rem; }
-  input, select, textarea { padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; font-weight: 400; }
+  /* ---------- dialogs ---------- */
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(480px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; color: var(--ink); box-shadow: 0 24px 70px rgba(20,33,61,.35); }
+  dialog::backdrop { background: rgba(20,33,61,.55); }
+  .sheet { padding: 26px 24px 24px; position: relative; display: grid; gap: 14px; }
+  .holes { display: flex; align-items: center; }
+  .close {
+    position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0;
+    background: transparent; font-size: 1.7rem; line-height: 1; color: var(--muted);
+  }
+  .sheet h2 { margin: 0; font-size: 1.7rem; line-height: 1.1; letter-spacing: -0.01em; }
+  .sub { margin: -6px 0 0; color: var(--muted); }
+  form { display: grid; gap: 14px; }
+  label { display: grid; gap: 5px; font-weight: 600; font-size: .92rem; }
+  input, select, textarea { min-height: 46px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; font-weight: 400; width: 100%; }
+  textarea { min-height: 76px; resize: vertical; }
+  input[type="file"] { padding: 7px 8px; min-height: 0; }
+  input[type="file"]::file-selector-button {
+    margin-right: 12px; min-height: 36px; padding: 0 16px; border: 1.5px solid var(--ink);
+    border-radius: 999px; background: transparent; font: inherit; font-weight: 700; cursor: pointer;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--ink); outline-offset: 0; }
+  .hint { font-weight: 400; font-size: .85rem; color: var(--muted); }
+  .pw { position: relative; display: block; }
+  .pw input { padding-right: 72px; }
+  .toggle { position: absolute; right: 4px; top: 4px; bottom: 4px; padding: 0 12px; border: 0; background: transparent; font-weight: 700; font-size: .85rem; color: var(--muted); border-radius: 8px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { min-height: 42px; border: 0; background: transparent; border-radius: 9px; font-weight: 700; color: var(--muted); }
+  .seg button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgba(20,33,61,.15); }
+  .link { background: none; border: 0; padding: 4px 0; min-height: 36px; font-weight: 600; color: var(--found); text-align: left; justify-self: start; text-decoration: underline; }
+  .msg { padding: 10px 12px; border-radius: 10px; font-weight: 600; font-size: .95rem; }
+  .msg.error { background: var(--lost-soft); color: var(--lost); }
+  .msg.ok { background: var(--found-soft); color: var(--found); }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .choice { display: flex; gap: 8px; }
-  .choice label { flex: 1; font-weight: 700; }
-  .choice input { position: absolute; opacity: 0; }
-  .choice span { display: block; text-align: center; padding: 10px; border: 2px solid var(--line); border-radius: 8px; cursor: pointer; }
-  .choice input:checked + span.l { border-color: var(--lost); color: var(--lost); background: #fdf0ed; }
-  .choice input:checked + span.f { border-color: var(--found); color: var(--found); background: #e8f5f5; }
+  .choice label { flex: 1; font-weight: 700; position: relative; }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+  .choice span { display: block; text-align: center; padding: 12px; border: 2px solid var(--line); border-radius: 10px; cursor: pointer; }
+  .choice input:checked + span.l { border-color: var(--lost); color: var(--lost); background: var(--lost-soft); }
+  .choice input:checked + span.f { border-color: var(--found); color: var(--found); background: var(--found-soft); }
   .choice input:focus-visible + span { outline: 3px solid #4c8dff; outline-offset: 2px; }
+  .preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; }
   .form-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
-  .cancel { background: none; border: 0; cursor: pointer; font-weight: 600; padding: 8px 12px; }
-  .error { color: var(--lost); font-weight: 600; min-height: 1.2em; margin: 0; }
-  @media (prefers-reduced-motion: no-preference) { .tag { transition: transform .15s; } .tag:hover { transform: translateY(-2px); } }
+  .full { width: 100%; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-weight: 600; opacity: 0;
+    pointer-events: none; z-index: 50; max-width: calc(100vw - 32px); text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: no-preference) { #toast { transition: opacity .2s, transform .2s; } }
+
+  /* ---------- phones ---------- */
+  @media (max-width: 700px) {
+    .hero { padding-top: 18px; }
+    .bar { margin: 16px 0; gap: 10px; }
+    .tabs { width: 100%; }
+    .tab { flex: 1; padding: 0 8px; }
+    .search { width: 100%; flex-basis: 100%; }
+    #open-form {
+      position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 20; min-height: 52px; padding: 0 24px; box-shadow: 0 8px 24px rgba(201,61,36,.4);
+    }
+    .who { display: none; }
+    .grid { gap: 14px; }
+    dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; }
+    .sheet { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  }
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; }
+    .brand-name { display: none; }
+    .btn { padding: 0 14px; }
+  }
+  @media (min-width: 1100px) { .hero { padding-top: 44px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <div class="topbar">
+    <div class="brand"><span class="dot lost"></span><span class="dot found"></span><span class="brand-name">Lost &amp; Found</span></div>
     <div class="auth" id="auth"></div>
+  </div>
+
+  <header class="hero">
     <h1>Lost something on campus?</h1>
     <p>Post what you lost or what you found. If a lost item and a found item look alike, we email the people involved.</p>
   </header>
@@ -102,15 +196,17 @@
       <button class="tab" data-filter="found" aria-pressed="false">Found</button>
     </div>
     <input class="search" id="search" type="search" placeholder="Search keys, phone, library..." aria-label="Search items">
-    <button class="post-btn" id="open-form">Post an item</button>
+    <button class="btn coral" id="open-form">+ Post an item</button>
   </div>
 
   <main class="grid" id="grid" aria-live="polite"></main>
 </div>
 
-<dialog id="dialog">
-  <form id="form">
-    <h2>Post an item</h2>
+<!-- Post an item -->
+<dialog id="post-dialog" aria-labelledby="post-title">
+  <form id="form" class="sheet" novalidate>
+    <button type="button" class="close" id="post-close" aria-label="Close">&times;</button>
+    <h2 id="post-title">Post an item</h2>
     <div class="choice" role="radiogroup" aria-label="Type">
       <label><input type="radio" name="type" value="lost" checked><span class="l">I lost it</span></label>
       <label><input type="radio" name="type" value="found"><span class="f">I found it</span></label>
@@ -132,133 +228,340 @@
     </div>
     <label>Details<textarea name="description" maxlength="300" rows="2" placeholder="Anything that helps prove it's yours"></textarea></label>
     <label>How can people reach you?<input name="contact" maxlength="80" required placeholder="WhatsApp number or email"></label>
-    <label>Photo (optional)<input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
-    <p class="error" id="error" role="alert"></p>
+    <label>Photo (optional)<input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/webp"></label>
+    <img class="preview" id="preview" alt="Photo preview" hidden>
+    <div class="msg error" id="post-error" role="alert" hidden></div>
     <div class="form-actions">
-      <button type="button" class="cancel" id="cancel">Cancel</button>
-      <button class="post-btn" id="submit">Post item</button>
+      <button type="button" class="btn" id="post-cancel">Cancel</button>
+      <button class="btn coral" id="post-submit">Post item</button>
     </div>
   </form>
 </dialog>
 
+<!-- Log in / sign up -->
+<dialog id="auth-dialog" aria-labelledby="auth-title">
+  <div class="sheet">
+    <button type="button" class="close" id="auth-close" aria-label="Close">&times;</button>
+    <div class="holes"><span class="dot lost"></span><span class="dot found"></span></div>
+    <h2 id="auth-title">Welcome back</h2>
+    <p class="sub" id="auth-sub"></p>
+    <div class="seg" id="auth-seg" role="tablist" aria-label="Account">
+      <button type="button" role="tab" data-view="login">Log in</button>
+      <button type="button" role="tab" data-view="signup">Sign up</button>
+    </div>
+    <div class="msg" id="auth-msg" role="alert" hidden></div>
+
+    <form data-view="login" novalidate>
+      <label>Email<input type="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>
+      <label>Password
+        <span class="pw"><input type="password" name="password" autocomplete="current-password"><button type="button" class="toggle">Show</button></span>
+      </label>
+      <button type="button" class="link" data-go="forgot">Forgot password?</button>
+      <button class="btn solid full">Log in</button>
+    </form>
+
+    <form data-view="signup" novalidate>
+      <label>Email<input type="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>
+      <label>Password
+        <span class="pw"><input type="password" name="password" autocomplete="new-password"><button type="button" class="toggle">Show</button></span>
+        <span class="hint">At least 8 characters, with a lowercase letter and a number.</span>
+      </label>
+      <button class="btn solid full">Create account</button>
+      <span class="hint">We will email you a 6-digit code to confirm it is really you.</span>
+    </form>
+
+    <form data-view="verify" novalidate>
+      <label>6-digit code<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></label>
+      <button class="btn solid full">Confirm and continue</button>
+      <button type="button" class="link" data-go="resend">Send a new code</button>
+    </form>
+
+    <form data-view="forgot" novalidate>
+      <label>Email<input type="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>
+      <button class="btn solid full">Send reset code</button>
+      <button type="button" class="link" data-go="login">Back to log in</button>
+    </form>
+
+    <form data-view="reset" novalidate>
+      <label>Code from your email<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></label>
+      <label>New password
+        <span class="pw"><input type="password" name="password" autocomplete="new-password"><button type="button" class="toggle">Show</button></span>
+      </label>
+      <button class="btn solid full">Set new password</button>
+    </form>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script src="config.js"></script>
 <script>
-const API = window.CONFIG.API_URL;
-const AUTH = "https://" + window.CONFIG.AUTH_DOMAIN;
-const CLIENT_ID = window.CONFIG.CLIENT_ID;
-const REDIRECT = location.origin + "/";
-
-function b64url(bytes) {
-  return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-async function login() {
-  const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
-  sessionStorage.setItem("pkce", verifier);
-  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
-  const q = new URLSearchParams({
-    client_id: CLIENT_ID, response_type: "code", scope: "openid email", redirect_uri: REDIRECT,
-    code_challenge: challenge, code_challenge_method: "S256",
-  });
-  location.href = AUTH + "/oauth2/authorize?" + q;
-}
-
-function logout() {
-  localStorage.removeItem("idToken");
-  location.href = AUTH + "/logout?" + new URLSearchParams({ client_id: CLIENT_ID, logout_uri: REDIRECT });
-}
-
-async function finishLogin() {
-  const code = new URLSearchParams(location.search).get("code");
-  if (!code) return;
-  history.replaceState({}, "", location.pathname);
-  const res = await fetch(AUTH + "/oauth2/token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code", client_id: CLIENT_ID, code,
-      redirect_uri: REDIRECT, code_verifier: sessionStorage.getItem("pkce") || "",
-    }),
-  });
-  if (res.ok) localStorage.setItem("idToken", (await res.json()).id_token);
-}
-
-function currentUser() {
-  const token = localStorage.getItem("idToken");
-  if (!token) return null;
-  try {
-    const p = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-    if (p.exp * 1000 < Date.now()) { localStorage.removeItem("idToken"); return null; }
-    return p;
-  } catch (e) { return null; }
-}
-
-function renderAuth() {
-  const box = document.getElementById("auth");
-  box.replaceChildren();
-  const user = currentUser();
-  if (user) {
-    const out = document.createElement("button");
-    out.textContent = "Log out";
-    out.onclick = logout;
-    box.append(document.createTextNode(user.email || "Signed in"), out);
-  } else {
-    const inn = document.createElement("button");
-    inn.textContent = "Log in or sign up";
-    inn.onclick = login;
-    box.append(inn);
-  }
-}
-const grid = document.getElementById("grid");
-const dialog = document.getElementById("dialog");
-const form = document.getElementById("form");
-const errorEl = document.getElementById("error");
+const CFG = window.CONFIG;
+const IDP = `https://cognito-idp.${CFG.REGION}.amazonaws.com/`;
+const $ = id => document.getElementById(id);
+const grid = $("grid"), form = $("form");
 let items = [], filter = "all", query = "";
+const state = { email: "", password: "", wantPost: false };
 
-async function api(path, options) {
-  const headers = { "content-type": "application/json" };
-  const token = localStorage.getItem("idToken");
-  if (token) headers.authorization = "Bearer " + token;
-  const res = await fetch(API + path, { ...options, headers });
-  if (res.status === 401) { localStorage.removeItem("idToken"); renderAuth(); throw new Error("Please log in again."); }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Something went wrong.");
-  return data;
-}
-
+/* ---------- helpers ---------- */
 function el(tag, props = {}, ...kids) {
   const node = Object.assign(document.createElement(tag), props);
   kids.forEach(k => node.append(k));
   return node;
 }
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+function showMsg(node, text, kind) {
+  node.hidden = !text;
+  node.textContent = text || "";
+  node.className = "msg " + (kind || "error");
+}
+function busy(btn, on, label) {
+  btn.disabled = on;
+  if (label) btn.textContent = on ? "Please wait..." : label;
+}
 
+/* ---------- Cognito (direct API, no redirect) ---------- */
+async function idp(target, payload) {
+  const res = await fetch(IDP, {
+    method: "POST",
+    headers: { "content-type": "application/x-amz-json-1.1", "x-amz-target": "AWSCognitoIdentityProviderService." + target },
+    body: JSON.stringify({ ClientId: CFG.CLIENT_ID, ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.message || "Something went wrong. Try again.");
+    err.code = String(data.__type || "").split("#").pop();
+    throw err;
+  }
+  return data;
+}
+
+function friendly(err) {
+  switch (err.code) {
+    case "NotAuthorizedException":
+    case "UserNotFoundException": return "Wrong email or password.";
+    case "UsernameExistsException": return "That email already has an account. Try logging in.";
+    case "CodeMismatchException": return "That code is not right. Check it and try again.";
+    case "ExpiredCodeException": return "That code has expired. Ask for a new one.";
+    case "InvalidPasswordException": return "Password needs 8+ characters, a lowercase letter and a number.";
+    case "InvalidParameterException": return "Please check what you entered and try again.";
+    case "LimitExceededException":
+    case "TooManyRequestsException":
+    case "TooManyFailedAttemptsException": return "Too many tries. Wait a few minutes and try again.";
+    default: return err.message || "Something went wrong. Try again.";
+  }
+}
+
+function decode(token) {
+  try { return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))); }
+  catch (e) { return null; }
+}
+function readSession() {
+  try { return JSON.parse(localStorage.getItem("session") || "null"); } catch (e) { return null; }
+}
+function writeSession(s) {
+  try { s ? localStorage.setItem("session", JSON.stringify(s)) : localStorage.removeItem("session"); } catch (e) { /* private mode */ }
+}
+function currentUser() {
+  const s = readSession();
+  return s ? decode(s.idToken) : null;
+}
+async function getToken() {
+  const s = readSession();
+  if (!s) return null;
+  const claims = decode(s.idToken);
+  if (claims && claims.exp * 1000 - Date.now() > 60000) return s.idToken;
+  if (!s.refreshToken) { writeSession(null); return null; }
+  try {
+    const r = await idp("InitiateAuth", { AuthFlow: "REFRESH_TOKEN_AUTH", AuthParameters: { REFRESH_TOKEN: s.refreshToken } });
+    s.idToken = r.AuthenticationResult.IdToken;
+    writeSession(s);
+    return s.idToken;
+  } catch (e) { writeSession(null); return null; }
+}
+async function signIn(email, password) {
+  const r = await idp("InitiateAuth", { AuthFlow: "USER_PASSWORD_AUTH", AuthParameters: { USERNAME: email, PASSWORD: password } });
+  const a = r.AuthenticationResult;
+  writeSession({ idToken: a.IdToken, refreshToken: a.RefreshToken });
+}
+
+/* ---------- API ---------- */
+async function api(path, options = {}, needAuth = false) {
+  const headers = { "content-type": "application/json" };
+  if (needAuth) {
+    const token = await getToken();
+    if (!token) { renderAuth(); const e = new Error("Please log in to continue."); e.code = "AUTH"; throw e; }
+    headers.authorization = "Bearer " + token;
+  }
+  const res = await fetch(CFG.API_URL + path, { ...options, headers });
+  if (res.status === 401) { writeSession(null); renderAuth(); const e = new Error("Your session ended. Please log in again."); e.code = "AUTH"; throw e; }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+
+/* ---------- auth UI ---------- */
+const authDialog = $("auth-dialog");
+const VIEWS = {
+  login: ["Welcome back", "Log in to post items and manage your posts.", true],
+  signup: ["Create your account", "One account lets you post and close your own items.", true],
+  verify: ["Check your email", "", false],
+  forgot: ["Reset your password", "We will email you a code to set a new one.", false],
+  reset: ["Choose a new password", "", false],
+};
+function showView(name, message, kind) {
+  const [title, sub, seg] = VIEWS[name];
+  $("auth-title").textContent = title;
+  $("auth-sub").textContent = name === "verify" ? `We sent a 6-digit code to ${state.email}.` : name === "reset" ? `Enter the code we sent to ${state.email}.` : sub;
+  $("auth-seg").hidden = !seg;
+  $("auth-seg").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === name)));
+  authDialog.querySelectorAll("form").forEach(f => { f.hidden = f.dataset.view !== name; });
+  showMsg($("auth-msg"), message, kind);
+  const first = authDialog.querySelector(`form[data-view="${name}"] input:not([type=hidden])`);
+  if (first && authDialog.open) setTimeout(() => first.focus(), 30);
+}
+function openAuth(view, message, kind) {
+  if (!authDialog.open) authDialog.showModal();
+  showView(view || "login", message, kind);
+}
+function afterLogin() {
+  authDialog.close();
+  state.password = "";
+  renderAuth();
+  load();
+  toast("You are logged in");
+  if (state.wantPost) { state.wantPost = false; openPost(); }
+}
+function formValue(view, name) {
+  return authDialog.querySelector(`form[data-view="${view}"] [name="${name}"]`).value.trim();
+}
+function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function validPassword(v) { return v.length >= 8 && /[a-z]/.test(v) && /[0-9]/.test(v); }
+
+$("auth-seg").addEventListener("click", e => { const v = e.target.dataset.view; if (v) showView(v); });
+$("auth-close").onclick = () => { state.wantPost = false; authDialog.close(); };
+authDialog.addEventListener("click", e => { if (e.target === authDialog) { state.wantPost = false; authDialog.close(); } });
+authDialog.querySelectorAll(".toggle").forEach(btn => btn.onclick = () => {
+  const input = btn.previousElementSibling;
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  btn.textContent = show ? "Hide" : "Show";
+});
+authDialog.querySelectorAll("[data-go]").forEach(btn => btn.onclick = async () => {
+  const go = btn.dataset.go;
+  if (go !== "resend") { showView(go); return; }
+  try { await idp("ResendConfirmationCode", { Username: state.email }); toast("New code sent"); }
+  catch (err) { showMsg($("auth-msg"), friendly(err)); }
+});
+
+authDialog.querySelectorAll("form").forEach(f => f.addEventListener("submit", async e => {
+  e.preventDefault();
+  const view = f.dataset.view, btn = f.querySelector(".btn"), label = btn.textContent, msg = $("auth-msg");
+  showMsg(msg, "");
+  try {
+    if (view === "login") {
+      const email = formValue("login", "email").toLowerCase(), password = f.password.value;
+      if (!validEmail(email) || !password) return showMsg(msg, "Enter your email and password.");
+      state.email = email; state.password = password;
+      busy(btn, true, label);
+      try { await signIn(email, password); afterLogin(); }
+      catch (err) {
+        if (err.code === "UserNotConfirmedException") {
+          await idp("ResendConfirmationCode", { Username: email }).catch(() => {});
+          showView("verify", "Your email is not confirmed yet. We sent you a new code.", "ok");
+        } else throw err;
+      }
+    } else if (view === "signup") {
+      const email = formValue("signup", "email").toLowerCase(), password = f.password.value;
+      if (!validEmail(email)) return showMsg(msg, "Enter a valid email address.");
+      if (!validPassword(password)) return showMsg(msg, "Password needs 8+ characters, a lowercase letter and a number.");
+      busy(btn, true, label);
+      await idp("SignUp", { Username: email, Password: password, UserAttributes: [{ Name: "email", Value: email }] });
+      state.email = email; state.password = password;
+      showView("verify", "Account created. Check your inbox (and spam) for the code.", "ok");
+    } else if (view === "verify") {
+      const code = formValue("verify", "code");
+      if (!/^\d{6}$/.test(code)) return showMsg(msg, "Enter the 6-digit code from your email.");
+      busy(btn, true, label);
+      await idp("ConfirmSignUp", { Username: state.email, ConfirmationCode: code });
+      if (state.password) { await signIn(state.email, state.password); afterLogin(); }
+      else showView("login", "Email confirmed. Log in to continue.", "ok");
+    } else if (view === "forgot") {
+      const email = formValue("forgot", "email").toLowerCase();
+      if (!validEmail(email)) return showMsg(msg, "Enter a valid email address.");
+      busy(btn, true, label);
+      await idp("ForgotPassword", { Username: email });
+      state.email = email;
+      showView("reset", "If that email has an account, a code is on its way.", "ok");
+    } else if (view === "reset") {
+      const code = formValue("reset", "code"), password = f.password.value;
+      if (!/^\d{6}$/.test(code)) return showMsg(msg, "Enter the 6-digit code from your email.");
+      if (!validPassword(password)) return showMsg(msg, "Password needs 8+ characters, a lowercase letter and a number.");
+      busy(btn, true, label);
+      await idp("ConfirmForgotPassword", { Username: state.email, ConfirmationCode: code, Password: password });
+      showView("login", "Password updated. Log in with your new password.", "ok");
+    }
+  } catch (err) {
+    showMsg(msg, friendly(err));
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}));
+
+function renderAuth() {
+  const box = $("auth");
+  box.replaceChildren();
+  const user = currentUser();
+  if (user) {
+    const email = user.email || "Signed in";
+    const out = el("button", { className: "btn small", textContent: "Log out" });
+    out.onclick = () => { writeSession(null); renderAuth(); load(); toast("Logged out"); };
+    box.append(el("span", { className: "avatar", textContent: email[0], title: email }), el("span", { className: "who", textContent: email }), out);
+  } else {
+    const inn = el("button", { className: "btn small", textContent: "Log in" });
+    const up = el("button", { className: "btn small solid", textContent: "Sign up" });
+    inn.onclick = () => openAuth("login");
+    up.onclick = () => openAuth("signup");
+    box.append(inn, up);
+  }
+}
+
+/* ---------- items ---------- */
 function render() {
   grid.replaceChildren();
   const q = query.toLowerCase();
   const shown = items.filter(i =>
     (filter === "all" || i.type === filter) &&
     (!q || [i.title, i.description, i.location, i.category].join(" ").toLowerCase().includes(q)));
-
   if (!shown.length) {
     grid.append(el("div", { className: "empty", textContent: "Nothing here yet. Post the first item." }));
     return;
   }
+  const me = currentUser();
   for (const i of shown) {
     const card = el("article", { className: "tag" });
     card.dataset.type = i.type;
     if (i.photoUrl) card.append(el("img", { src: i.photoUrl, alt: i.title, loading: "lazy" }));
-    const body = el("div", { className: "body" },
-      el("span", { className: "kind", textContent: i.type === "lost" ? "Lost" : "Found" }),
+    const kind = el("div", { className: "kindrow" }, el("span", { className: "kind", textContent: i.type === "lost" ? "Lost" : "Found" }));
+    const mine = me && i.ownerId === me.sub;
+    if (mine) kind.append(el("span", { className: "mine", textContent: "Your post" }));
+    const body = el("div", { className: "body" }, kind,
       el("h3", { textContent: i.title }),
       el("p", { className: "meta", textContent: `${i.location} - ${new Date(i.created * 1000).toLocaleDateString()}` }));
     if (i.description) body.append(el("p", { className: "desc", textContent: i.description }));
     const actions = el("div", { className: "actions" }, el("span", { className: "contact", textContent: i.contact }));
-    const me = currentUser();
-    if (me && i.ownerId === me.sub) {
+    if (mine) {
       const resolve = el("button", { className: "resolve", textContent: i.type === "lost" ? "I got it back" : "Returned to owner" });
       resolve.onclick = async () => {
-        try { await api(`/items/${i.id}/resolve`, { method: "POST", body: "{}" }); load(); }
-        catch (err) { alert(err.message); }
+        resolve.disabled = true;
+        try { await api(`/items/${i.id}/resolve`, { method: "POST", body: "{}" }, true); toast("Marked as resolved"); load(); }
+        catch (err) { resolve.disabled = false; err.code === "AUTH" ? openAuth("login", err.message) : toast(err.message); }
       };
       actions.append(resolve);
     }
@@ -270,52 +573,86 @@ function render() {
 
 async function load() {
   try { items = (await api("/items")).items; }
-  catch (e) { grid.replaceChildren(el("div", { className: "empty", textContent: "Could not load items. Refresh to try again." })); return; }
+  catch (e) { grid.replaceChildren(el("div", { className: "empty", textContent: "Could not load items. Check your connection and refresh." })); return; }
   render();
 }
 
 document.querySelectorAll(".tab").forEach(btn => btn.onclick = () => {
   filter = btn.dataset.filter;
-  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", b === btn));
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
   render();
 });
-document.getElementById("search").oninput = e => { query = e.target.value; render(); };
-document.getElementById("open-form").onclick = () => {
+$("search").oninput = e => { query = e.target.value; render(); };
+
+/* ---------- post dialog ---------- */
+const postDialog = $("post-dialog");
+function openPost() {
   const me = currentUser();
-  if (!me) { login(); return; }
-  errorEl.textContent = "";
+  if (!me) { state.wantPost = true; openAuth("login", "Log in or sign up to post an item.", "ok"); return; }
+  showMsg($("post-error"), "");
   if (!form.contact.value) form.contact.value = me.email || "";
-  dialog.showModal();
+  postDialog.showModal();
+}
+$("open-form").onclick = openPost;
+$("post-close").onclick = $("post-cancel").onclick = () => postDialog.close();
+postDialog.addEventListener("click", e => { if (e.target === postDialog) postDialog.close(); });
+
+$("photo").onchange = () => {
+  const file = $("photo").files[0], img = $("preview");
+  if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+  if (!file) { img.hidden = true; return; }
+  img.src = URL.createObjectURL(file); img.hidden = false;
 };
-document.getElementById("cancel").onclick = () => dialog.close();
+
+/* phone photos are huge: shrink to max 1600px JPEG before uploading */
+async function shrink(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale); canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.85));
+    return blob && blob.size < file.size ? blob : file;
+  } catch (e) { return file; }
+}
 
 form.onsubmit = async e => {
   e.preventDefault();
-  const submit = document.getElementById("submit");
-  submit.disabled = true; submit.textContent = "Posting...";
-  errorEl.textContent = "";
+  const submit = $("post-submit"), errBox = $("post-error");
+  showMsg(errBox, "");
+  const f = new FormData(form);
+  if (!f.get("title").trim() || !f.get("location").trim() || !f.get("contact").trim()) {
+    return showMsg(errBox, "Fill in what it is, where, and how to reach you.");
+  }
+  busy(submit, true, "Post item");
   try {
-    const f = new FormData(form);
     let photoKey = "";
     const photo = f.get("photo");
     if (photo && photo.size) {
-      if (photo.size > 5 * 1024 * 1024) throw new Error("Photo must be under 5 MB.");
-      const { uploadUrl, key } = await api("/upload-url", { method: "POST", body: JSON.stringify({ contentType: photo.type }) });
-      const put = await fetch(uploadUrl, { method: "PUT", headers: { "content-type": photo.type }, body: photo });
-      if (!put.ok) throw new Error("Photo upload failed.");
+      const blob = await shrink(photo);
+      if (blob.size > 5 * 1024 * 1024) throw new Error("Photo must be under 5 MB.");
+      const type = blob.type || "image/jpeg";
+      const { uploadUrl, key } = await api("/upload-url", { method: "POST", body: JSON.stringify({ contentType: type }) }, true);
+      const put = await fetch(uploadUrl, { method: "PUT", headers: { "content-type": type }, body: blob });
+      if (!put.ok) throw new Error("Photo upload failed. Try a smaller photo.");
       photoKey = key;
     }
     const payload = Object.fromEntries([...f.entries()].filter(([k]) => k !== "photo"));
-    await api("/items", { method: "POST", body: JSON.stringify({ ...payload, photoKey }) });
-    form.reset(); dialog.close(); load();
+    await api("/items", { method: "POST", body: JSON.stringify({ ...payload, photoKey }) }, true);
+    form.reset(); $("preview").hidden = true; postDialog.close(); toast("Posted"); load();
   } catch (err) {
-    errorEl.textContent = err.message;
+    if (err.code === "AUTH") { postDialog.close(); state.wantPost = true; openAuth("login", err.message); }
+    else showMsg(errBox, err.message);
   } finally {
     submit.disabled = false; submit.textContent = "Post item";
   }
 };
 
-(async () => { await finishLogin(); renderAuth(); load(); })();
+/* ---------- start ---------- */
+grid.replaceChildren(el("div", { className: "skeleton" }), el("div", { className: "skeleton" }), el("div", { className: "skeleton" }));
+renderAuth();
+load();
 </script>
 </body>
 </html>
